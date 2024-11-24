@@ -1,0 +1,146 @@
+-- User table
+CREATE TABLE User (
+    User_ID INT PRIMARY KEY AUTO_INCREMENT,
+    Username VARCHAR(255) UNIQUE NOT NULL,
+    Email VARCHAR(255) UNIQUE NOT NULL,
+    DOB DATE,
+    Profile_Image VARCHAR(255),
+    Password VARCHAR(255) NOT NULL,
+    Is_Premium BOOLEAN DEFAULT FALSE
+);
+
+-- PremiumUsers table
+CREATE TABLE PremiumUsers (
+    User_ID INT PRIMARY KEY,
+    Plan VARCHAR(255),
+    Billing_Date DATE,
+    Amount_to_Be_Paid DECIMAL(10, 2),
+    FOREIGN KEY (User_ID) REFERENCES User(User_ID)
+);
+
+-- Artists table
+CREATE TABLE Artists (
+    Artist_ID INT PRIMARY KEY AUTO_INCREMENT,
+    Name VARCHAR(255) NOT NULL,
+    Is_Verified BOOLEAN DEFAULT FALSE,
+    Profile_Image VARCHAR(255)
+);
+
+-- VerifiedArtist table
+CREATE TABLE VerifiedArtist (
+    Artist_ID INT PRIMARY KEY,
+    Revenue_Generated DECIMAL(10, 2),
+    Verification_Date DATE,
+    FOREIGN KEY (Artist_ID) REFERENCES Artists(Artist_ID)
+);
+
+-- ArtistGenre table
+CREATE TABLE ArtistGenre (
+    Artist_ID INT,
+    GenreName VARCHAR(255),
+    PRIMARY KEY (Artist_ID, GenreName),
+    FOREIGN KEY (Artist_ID) REFERENCES Artists(Artist_ID)
+);
+
+-- UserFollowsUser table
+CREATE TABLE UserFollowsUser (
+    Follower_ID INT,
+    Followee_ID INT,
+    PRIMARY KEY (Follower_ID, Followee_ID),
+    FOREIGN KEY (Follower_ID) REFERENCES User(User_ID),
+    FOREIGN KEY (Followee_ID) REFERENCES User(User_ID)
+);
+
+-- UserFollowsArtist table
+CREATE TABLE UserFollowsArtist (
+    User_ID INT,
+    Artist_ID INT,
+    PRIMARY KEY (User_ID, Artist_ID),
+    FOREIGN KEY (User_ID) REFERENCES User(User_ID),
+    FOREIGN KEY (Artist_ID) REFERENCES Artists(Artist_ID)
+);
+
+-- Track table
+CREATE TABLE Track (
+    Track_ID INT PRIMARY KEY AUTO_INCREMENT,
+    Track_Name VARCHAR(255) NOT NULL,
+    Likes INT DEFAULT 0,
+    Duration TIME,
+    Streams INT DEFAULT 0,
+    Album_ID INT,
+    FOREIGN KEY (Album_ID) REFERENCES Albums(Album_ID)
+);
+
+-- TrackGenre table
+CREATE TABLE TrackGenre (
+    Track_ID INT,
+    GenreName VARCHAR(255),
+    PRIMARY KEY (Track_ID, GenreName),
+    FOREIGN KEY (Track_ID) REFERENCES Track(Track_ID)
+);
+
+-- Albums table
+CREATE TABLE Albums (
+    Album_ID INT PRIMARY KEY AUTO_INCREMENT,
+    Name VARCHAR(255) NOT NULL,
+    Image VARCHAR(255),
+    Release_Date DATE,
+    Artist_ID INT,
+    FOREIGN KEY (Artist_ID) REFERENCES Artists(Artist_ID)
+);
+
+-- Playlist table
+CREATE TABLE Playlist (
+    Playlist_ID INT PRIMARY KEY AUTO_INCREMENT,
+    Name VARCHAR(255) NOT NULL,
+    Image VARCHAR(255),
+    Type VARCHAR(50),
+    Creator INT,
+    FOREIGN KEY (Creator) REFERENCES User(User_ID)
+);
+
+-- PlaylistGenre table
+CREATE TABLE PlaylistGenre (
+    Playlist_ID INT,
+    GenreName VARCHAR(255),
+    PRIMARY KEY (Playlist_ID, GenreName),
+    FOREIGN KEY (Playlist_ID) REFERENCES Playlist(Playlist_ID)
+);
+
+-- TrackInPlaylist table
+CREATE TABLE TrackInPlaylist (
+    Track_ID INT,
+    Playlist_ID INT,
+    Artist_ID INT,
+    PRIMARY KEY (Track_ID, Playlist_ID),
+    FOREIGN KEY (Track_ID) REFERENCES Track(Track_ID),
+    FOREIGN KEY (Playlist_ID) REFERENCES Playlist(Playlist_ID),
+    FOREIGN KEY (Artist_ID) REFERENCES Artists(Artist_ID)
+);
+
+-- ArtistsOnTrack table
+CREATE TABLE ArtistsOnTrack (
+    Track_ID INT,
+    Artist_ID INT,
+    PRIMARY KEY (Track_ID, Artist_ID),
+    FOREIGN KEY (Track_ID) REFERENCES Track(Track_ID),
+    FOREIGN KEY (Artist_ID) REFERENCES Artists(Artist_ID)
+);
+
+-- UserLikesTrack table
+CREATE TABLE UserLikesTrack (
+    User_ID INT,
+    Track_ID INT,
+    PRIMARY KEY (User_ID, Track_ID),
+    FOREIGN KEY (User_ID) REFERENCES User(User_ID),
+    FOREIGN KEY (Track_ID) REFERENCES Track(Track_ID)
+);
+
+-- UserContributesToPlaylist table
+CREATE TABLE UserContributesToPlaylist (
+    User_ID INT,
+    Playlist_ID INT,
+    PRIMARY KEY (User_ID, Playlist_ID),
+    FOREIGN KEY (User_ID) REFERENCES User(User_ID),
+    FOREIGN KEY (Playlist_ID) REFERENCES Playlist(Playlist_ID)
+);
