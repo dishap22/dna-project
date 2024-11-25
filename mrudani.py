@@ -47,7 +47,66 @@ def addplaylist():
         else:
             print("Incorrect password")
 
-# edit playlist, ask to choose options between adding tracks, removing track, renaming the playlist, updating the image 
+# edit playlist, ask to choose options between adding tracks, removing track, renaming the playlist, updating the image
+def editplaylist():
+    playlistname = input("Enter playlist name: ")
+    query = "SELECT * FROM Playlist WHERE Name = '" + playlistname + "'"
+    cur.execute(query)
+    rows = cur.fetchall()
+    con.commit()
+    if len(rows) == 0:
+        print("Playlist does not exist")
+        return
+    else:
+        if len(rows) > 1:
+            print("Multiple playlists with same name")
+            return
+        print("1. Add track")
+        print("2. Remove track")
+        print("3. Rename playlist")
+        print("4. Update image")
+        ch = int(input("Enter choice> "))
+        if ch == 1:
+            trackname = input("Enter track name: ")
+            artistname = input("Enter artist name: ")
+            # get artist id
+            query = "SELECT Artist_ID FROM Artists WHERE Name = '" + artistname + "'"
+            if cur.execute(query) == 0:
+                print("Artist does not exist")
+                return
+            artistid = cur.fetchall()[0]["Artist_ID"]
+            # get track id
+            query = "SELECT Track_ID FROM Track WHERE Name = '" + trackname + "' AND Artist_ID = " + str(artistid)
+            if cur.execute(query) == 0:
+                print("Track does not exist")
+                return
+            trackid = cur.fetchall()[0]["Track_ID"]
+            query = "INSERT INTO TrackInPlaylist (Playlist_ID, Track_ID, Artist_ID) VALUES (" + str(rows[0]["Playlist_ID"]) + ", " + str(trackid) +  ", " + str(artistid) + ")"
+            cur.execute(query)
+            con.commit()
+            print("Inserted Into Database")
+        elif ch == 2:
+            # get track id and artist id
+            trackname = input("Enter track name: ")
+            artistname = input("Enter artist name: ")
+            query = "SELECT Artist_ID FROM Artists WHERE Name = '" + artistname + "'"
+            if cur.execute(query) == 0:
+                print("Artist does not exist")
+                return
+            artistid = cur.fetchall()[0]["Artist_ID"]
+            query = "SELECT Track_ID FROM Track WHERE Name = '" + trackname + "' AND Artist_ID = " + str(artistid)
+            if cur.execute(query) == 0:
+                print("Track does not exist")
+                return
+            trackid = cur.fetchall()[0]["Track_ID"]
+            query = "DELETE FROM TrackInPlaylist WHERE Playlist_ID = " + str(rows[0]["Playlist_ID"]) + " AND Track_ID = " + str(trackid) + " AND Artist_ID = " + str(artistid)
+        elif ch == 3:
+            newplaylistname = input("Enter new playlist name: ")
+            query = "UPDATE Playlist SET Name = '" + newplaylistname + "' WHERE Playlist_ID = " + str(rows[0]["Playlist_ID"])
+            cur.execute(query)
+            con.commit()
+            print("Updated In Database")
+
 
 
 
