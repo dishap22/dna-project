@@ -2,47 +2,39 @@ import subprocess as sp
 import pymysql
 import pymysql.cursors
 
-def hireAnEmployee():
-    """
-    This is a sample function implemented for the refrence.
-    This example is related to the Employee Database.
-    In addition to taking input, you are required to handle domain errors as well
-    For example: the SSN should be only 9 characters long
-    Sex should be only M or F
-    If you choose to take Super_SSN, you need to make sure the foreign key constraint is satisfied
-    HINT: Instead of handling all these errors yourself, you can make use of except clause to print the error returned to you by MySQL
-    """
-    try:
-        # Takes emplyee details as input
-        row = {}
-        print("Enter new employee's details: ")
-        name = (input("Name (Fname Minit Lname): ")).split(' ')
-        row["Fname"] = name[0]
-        row["Minit"] = name[1]
-        row["Lname"] = name[2]
-        row["Ssn"] = input("SSN: ")
-        row["Bdate"] = input("Birth Date (YYYY-MM-DD): ")
-        row["Address"] = input("Address: ")
-        row["Sex"] = input("Sex: ")
-        row["Salary"] = float(input("Salary: "))
-        row["Dno"] = int(input("Dno: "))
+def addTrackLike(user_id, track_id):
+    try: 
+        query1 = "UPDATE Track SET Likes = Likes + 1 WHERE Track_ID = %s"
 
-        query = "INSERT INTO EMPLOYEE(Fname, Minit, Lname, Ssn, Bdate, Address, Sex, Salary, Dno) VALUES('%s', '%c', '%s', '%s', '%s', '%s', '%c', %f, %d)" % (
-            row["Fname"], row["Minit"], row["Lname"], row["Ssn"], row["Bdate"], row["Address"], row["Sex"], row["Salary"], row["Dno"])
-
-        print(query)
-        cur.execute(query)
+        query2 = "INSERT INTO UserLikesTrack (User_ID, Track_ID) VALUES (%s, %s)"
+        
+        cur.execute(query1, (track_id,))
+        cur.execute(query2, (user_id, track_id))
         con.commit()
 
-        print("Inserted Into Database")
+        print("Track liked successfully")
 
     except Exception as e:
         con.rollback()
-        print("Failed to insert into database")
+        print("Failed to like the track")
         print(">>>>>>>>>>>>>", e)
 
-    return
+def removeTrackLike(user_id, track_id):
+    try: 
+        query1 = "UPDATE Track SET Likes = Likes - 1 WHERE Track_ID = %s"
 
+        query2 = "DELETE FROM UserLikesTrack WHERE User_ID = %s AND Track_ID = %s"
+        
+        cur.execute(query1, (track_id,))
+        cur.execute(query2, (user_id, track_id))
+        con.commit()
+
+        print("Track unliked successfully")
+
+    except Exception as e:
+        con.rollback()
+        print("Failed to unlike the track")
+        print(">>>>>>>>>>>>>", e)
 
 def dispatch(ch):
     """
@@ -50,7 +42,13 @@ def dispatch(ch):
     """
 
     if(ch == 1):
-        hireAnEmployee()
+        user_id = input("Enter User ID: ")
+        track_id = input("Enter Track ID: ")
+        addTrackLike(user_id, track_id)
+    elif(ch == 2):
+        user_id = input("Enter User ID: ")
+        track_id = input("Enter Track ID: ")
+        removeTrackLike(user_id, track_id)
     else:
         print("Error: Invalid Option")
 
@@ -85,10 +83,8 @@ while(1):
             while(1):
                 tmp = sp.call('clear', shell=True)
                 # Here taking example of Employee Mini-world
-                print("1. Option 1")  # Hire an Employee
-                print("2. Option 2")  # Fire an Employee
-                print("3. Option 3")  # Promote Employee
-                print("4. Option 4")  # Employee Statistics
+                print("1. Like a track")  
+                print("2. Unlike a track") 
                 print("5. Logout")
                 ch = int(input("Enter choice> "))
                 tmp = sp.call('clear', shell=True)
