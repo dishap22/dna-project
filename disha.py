@@ -2,6 +2,7 @@ import subprocess as sp
 import pymysql
 import pymysql.cursors
 
+# ============== [Functional Requirement C] ==============
 def addTrackLike(user_id, track_id):
     try: 
         query1 = "UPDATE Track SET Likes = Likes + 1 WHERE Track_ID = %s"
@@ -19,6 +20,7 @@ def addTrackLike(user_id, track_id):
         print("Failed to like the track")
         print(">>>>>>>>>>>>>", e)
 
+
 def removeTrackLike(user_id, track_id):
     try: 
         query1 = "UPDATE Track SET Likes = Likes - 1 WHERE Track_ID = %s"
@@ -35,6 +37,42 @@ def removeTrackLike(user_id, track_id):
         con.rollback()
         print("Failed to unlike the track")
         print(">>>>>>>>>>>>>", e)
+
+
+
+# ============== [Functional Requirement E] ==============
+def followArtist(user_id, artist_id):
+    try: 
+        query1 = "UPDATE Artists SET Followers = Followers + 1 WHERE Artist_ID = %s"
+        query2 = "INSERT INTO UserFollowsArtist (User_ID, Artist_ID) VALUES (%s, %s)"
+        
+        cur.execute(query1, (artist_id,))
+        cur.execute(query2, (user_id, artist_id))
+        con.commit()
+
+        print("Artist followed successfully")
+
+    except Exception as e:
+        con.rollback()
+        print("Failed to follow the artist")
+        print(">>>>>>>>>>>>>", e)
+
+def unfollowArtist(user_id, artist_id):
+    try: 
+        query1 = "UPDATE Artists SET Followers = Followers - 1 WHERE Artist_ID = %s"
+        query2 = "DELETE FROM UserFollowsArtist WHERE User_ID = %s AND Artist_ID = %s"
+        
+        cur.execute(query1, (artist_id,))
+        cur.execute(query2, (user_id, artist_id))
+        con.commit()
+
+        print("Artist unfollowed successfully")
+
+    except Exception as e:
+        con.rollback()
+        print("Failed to unfollow the artist")
+        print(">>>>>>>>>>>>>", e)
+        
 
 def dispatch(ch):
     """
