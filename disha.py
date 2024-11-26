@@ -72,7 +72,39 @@ def unfollowArtist(user_id, artist_id):
         con.rollback()
         print("Failed to unfollow the artist")
         print(">>>>>>>>>>>>>", e)
-        
+
+ # ============== [Functional Requirement I] ==============       
+def subscribeToPremium(user_id, plan, billing_date, amount):
+    try:
+        query1 = "UPDATE User SET Is_Premium = TRUE WHERE User_ID = %s"
+        query2 = "INSERT INTO PremiumUsers (User_ID, Plan, Billing_Date, Amount_to_Be_Paid) VALUES (%s, %s, %s, %s)"
+
+        cur.execute(query1, (user_id,))
+        cur.execute(query2, (user_id, plan, billing_date, amount))
+        con.commit()
+
+        print("Subscribed to premium successfully")
+    
+    except Exception as e:
+        con.rollback()
+        print("Failed to subscribe to premium")
+        print(">>>>>>>>>>>>>", e)
+
+def unsubscribeToPremium(user_id):
+    try:
+        query1 = "UPDATE User SET Is_Premium = FALSE WHERE User_ID = %s"
+        query2 = "DELETE FROM PremiumUsers WHERE User_ID = %s"
+
+        cur.execute(query1, (user_id,))
+        cur.execute(query2, (user_id,))
+        con.commit()
+
+        print("Unsubscribed to premium successfully")
+    
+    except Exception as e:
+        con.rollback()
+        print("Failed to unsubscribe to premium")
+        print(">>>>>>>>>>>>>", e)
 
 def dispatch(ch):
     """
@@ -87,6 +119,23 @@ def dispatch(ch):
         user_id = input("Enter User ID: ")
         track_id = input("Enter Track ID: ")
         removeTrackLike(user_id, track_id)
+    elif(ch == 3):
+        user_id = input("Enter User ID: ")
+        artist_id = input("Enter Artist ID: ")
+        followArtist(user_id, artist_id)
+    elif(ch == 4):
+        user_id = input("Enter User ID: ")
+        artist_id = input("Enter Artist ID: ")
+        unfollowArtist(user_id, artist_id)
+    elif(ch == 5):
+        user_id = input("Enter User ID: ")
+        plan = input("Enter Plan: ")
+        billing_date = input("Enter Billing Date: ")
+        amount = input("Enter Amount: ")
+        subscribeToPremium(user_id, plan, billing_date, amount)
+    elif(ch == 6):
+        user_id = input("Enter User ID: ")
+        unsubscribeToPremium(user_id)
     else:
         print("Error: Invalid Option")
 
@@ -123,10 +172,14 @@ while(1):
                 # Here taking example of Employee Mini-world
                 print("1. Like a track")  
                 print("2. Unlike a track") 
-                print("5. Logout")
+                print("3. Follow an artist")
+                print("4. Unfollow an artist")
+                print("5. Subscribe to premium")
+                print("6. Unsubscribe to premium")
+                print("7. Logout")
                 ch = int(input("Enter choice> "))
                 tmp = sp.call('clear', shell=True)
-                if ch == 5:
+                if ch == 7:
                     exit()
                 else:
                     dispatch(ch)
