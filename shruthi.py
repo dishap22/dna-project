@@ -1,7 +1,8 @@
 import mysql.connector
+from mysql.connector import Error
 
 def connect_to_db():
-    """Connect to the MySQL database."""
+    # Connect to the MySQL database.
     return mysql.connector.connect(
         host="localhost",
         user="root",  
@@ -9,29 +10,45 @@ def connect_to_db():
         database="phase" 
     )
 
+def title_case(text):
+    # Convert the text to title case.
+    return text.title()
+
 def get_all_followers_of_artist(cursor, identifier):
-    """Retrieve all users who follow a given artist by ID or name."""
-    if isinstance(identifier, int):  # Search by Artist_ID
-        query = """
-        SELECT U.Username
-        FROM User U
-        JOIN UserFollowsArtist UFA ON U.User_ID = UFA.User_ID
-        WHERE UFA.Artist_ID = %s;
-        """
-        cursor.execute(query, (identifier,))
-    else:  # Search by Artist Name
-        query = """
-        SELECT U.Username
-        FROM User U
-        JOIN UserFollowsArtist UFA ON U.User_ID = UFA.User_ID
-        JOIN Artists A ON UFA.Artist_ID = A.Artist_ID
-        WHERE A.Name = %s;
-        """
-        cursor.execute(query, (identifier,))
-    return cursor.fetchall()
+    # Retrieve all users who follow a given artist by ID or name.
+    try:
+        if isinstance(identifier, int):  # Search by Artist_ID
+            query = """
+            SELECT U.Username
+            FROM User U
+            JOIN UserFollowsArtist UFA ON U.User_ID = UFA.User_ID
+            WHERE UFA.Artist_ID = %s;
+            """
+            cursor.execute(query, (identifier,))
+        else:  # Search by Artist Name
+            query = """
+            SELECT U.Username
+            FROM User U
+            JOIN UserFollowsArtist UFA ON U.User_ID = UFA.User_ID
+            JOIN Artists A ON UFA.Artist_ID = A.Artist_ID
+            WHERE A.Name = %s;
+            """
+            cursor.execute(query, (identifier,))
+        followers = cursor.fetchall()
+        
+        # Print each follower separated by commas, except the last one
+        if followers:
+            for i, follower in enumerate(followers):
+                follower_name = title_case(follower[0])
+                if i < len(followers) - 1:
+                    print(follower_name, end=", ")
+                else:
+                    print(follower_name)
+    except Error as e:
+        print(f"Error executing query: {e}")
 
 def get_artists_in_range(cursor, min_followers, max_followers):
-    """Retrieve artist names and genres with followers in a given range."""
+    # Retrieve artist names and genres with followers in a given range.
     query = """
     SELECT A.Name, AG.GenreName
     FROM Artists A
@@ -41,10 +58,19 @@ def get_artists_in_range(cursor, min_followers, max_followers):
            WHERE UFA.Artist_ID = A.Artist_ID) BETWEEN %s AND %s;
     """
     cursor.execute(query, (min_followers, max_followers))
-    return cursor.fetchall()
+    artists = cursor.fetchall()
+
+    # Print artists and genres, separated by commas
+    if artists:
+        for i, artist in enumerate(artists):
+            artist_info = f"{title_case(artist[0])} ({title_case(artist[1])})"
+            if i < len(artists) - 1:
+                print(artist_info, end=", ")
+            else:
+                print(artist_info)
 
 def get_average_followers(cursor):
-    """Calculate the average number of followers per artist."""
+    # Calculate the average number of followers per artist.
     query = """
     SELECT AVG(FollowerCount) AS AverageFollowers
     FROM (
@@ -57,17 +83,26 @@ def get_average_followers(cursor):
     return cursor.fetchone()[0]
 
 def search_tracks(cursor, partial_name):
-    """Search for tracks that partially match a given name."""
+    # Search for tracks that partially match a given name.
     query = """
     SELECT Track_Name
     FROM Track
     WHERE Track_Name LIKE %s;
     """
     cursor.execute(query, (f"%{partial_name}%",))
-    return cursor.fetchall()
+    tracks = cursor.fetchall()
+
+    # Print track names, separated by commas
+    if tracks:
+        for i, track in enumerate(tracks):
+            track_name = title_case(track[0])
+            if i < len(tracks) - 1:
+                print(track_name, end=", ")
+            else:
+                print(track_name)
 
 def get_average_tracks_per_playlist(cursor):
-    """Calculate the average number of tracks per playlist created by users."""
+    # Calculate the average number of tracks per playlist created by users.
     query = """
     SELECT AVG(TrackCount) AS AverageTracks
     FROM (
@@ -81,7 +116,7 @@ def get_average_tracks_per_playlist(cursor):
     return cursor.fetchone()[0]
 
 def get_total_likes_for_artist(cursor, identifier):
-    """Calculate the total likes for an artist's tracks by ID or name."""
+    # Calculate the total likes for an artist's tracks by ID or name.
     if isinstance(identifier, int):  # Search by Artist_ID
         query = """
         SELECT SUM(T.Likes) AS TotalLikes
@@ -100,8 +135,9 @@ def get_total_likes_for_artist(cursor, identifier):
         """
         cursor.execute(query, (identifier,))
     return cursor.fetchone()[0]
+
 def get_sorted_by_genre(cursor):
-    """Retrieve and sort albums, artists, and tracks by genre."""
+    # Retrieve and sort albums, artists, and tracks by genre.
     query_artists = """
     SELECT AG.GenreName, A.Name AS Artist_Name
     FROM Artists A
@@ -130,7 +166,35 @@ def get_sorted_by_genre(cursor):
     cursor.execute(query_tracks)
     tracks = cursor.fetchall()
 
-    return {"artists": artists, "albums": albums, "tracks": tracks}
+    # Print artists sorted by genre
+    if artists:
+        print("\nArtists sorted by genre:")
+        for i, artist in enumerate(artists):
+            artist_info = f"{title_case(artist[0])} ({title_case(artist[1])})"
+            if i < len(artists) - 1:
+                print(artist_info, end=", ")
+            else:
+                print(artist_info)
+
+    # Print albums sorted by genre
+    if albums:
+        print("\nAlbums sorted by genre:")
+        for i, album in enumerate(albums):
+            album_info = f"{title_case(album[0])} ({title_case(album[1])})"
+            if i < len(albums) - 1:
+                print(album_info, end=", ")
+            else:
+                print(album_info)
+
+    # Print tracks sorted by genre
+    if tracks:
+        print("\nTracks sorted by genre:")
+        for i, track in enumerate(tracks):
+            track_info = f"{title_case(track[0])} ({title_case(track[1])})"
+            if i < len(tracks) - 1:
+                print(track_info, end=", ")
+            else:
+                print(track_info)
 
 def main():
     db_connection = connect_to_db()
@@ -153,14 +217,14 @@ def main():
             identifier = input("Enter Artist ID (integer) or Name (string): ")
             if identifier.isdigit():
                 identifier = int(identifier)
-            followers = get_all_followers_of_artist(cursor, identifier)
-            print("Followers:", followers)
+            print("Followers:")
+            get_all_followers_of_artist(cursor, identifier)
 
         elif choice == "2":
             min_followers = int(input("Enter minimum follower count: "))
             max_followers = int(input("Enter maximum follower count: "))
-            artists = get_artists_in_range(cursor, min_followers, max_followers)
-            print("Artists:", artists)
+            print("Artists in range:")
+            get_artists_in_range(cursor, min_followers, max_followers)
 
         elif choice == "3":
             avg_followers = get_average_followers(cursor)
@@ -168,8 +232,8 @@ def main():
 
         elif choice == "4":
             partial_name = input("Enter partial track name: ")
-            tracks = search_tracks(cursor, partial_name)
-            print("Matching Tracks:", tracks)
+            print("Matching Tracks:")
+            search_tracks(cursor, partial_name)
 
         elif choice == "5":
             avg_tracks = get_average_tracks_per_playlist(cursor)
@@ -183,18 +247,7 @@ def main():
             print("Total Likes for Artist's Tracks:", total_likes)
 
         elif choice == "7":
-            sorted_data = get_sorted_by_genre(cursor)
-            print("\nArtists sorted by genre:")
-            for genre, artist in sorted_data["artists"]:
-                print(f"Genre: {genre}, Artist: {artist}")
-
-            print("\nAlbums sorted by genre:")
-            for genre, album in sorted_data["albums"]:
-                print(f"Genre: {genre}, Album: {album}")
-
-            print("\nTracks sorted by genre:")
-            for genre, track in sorted_data["tracks"]:
-                print(f"Genre: {genre}, Track: {track}")
+            get_sorted_by_genre(cursor)
 
         elif choice == "8":
             print("Exiting program.")
