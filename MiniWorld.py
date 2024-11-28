@@ -9,7 +9,7 @@ def insertNewUser(name, email, password, is_premium, profile_picture):
         return None
 
     try:
-        query = "INSERT INTO User (Name, Email, Password, Is_Premium, Profile_Image) VALUES (%s, %s, %s, %s, %s)"
+        query = "INSERT INTO User (Username, Email, Password, Is_Premium, Profile_Image) VALUES (%s, %s, %s, %s, %s)"
         cur.execute(query, (name, email, password, is_premium, profile_picture))
         con.commit()
         print("User inserted successfully")
