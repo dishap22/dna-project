@@ -79,12 +79,12 @@ def removeUser(user_id):
         print("Failed to remove user")
         print(">>>>>>>>>>>>>", e)
 
-def removeUserPlaylist(user_id, playlist_id):
+def removeUserPlaylist(playlist_id):
     
     
     # if the user and playlist exist, remove the playlist from the user's playlists
     try:
-        query = "DELETE FROM UserOwnsPlaylist WHERE User_ID = %s AND Playlist_ID = %s"
+        query = "DELETE FROM Playlist WHERE Playlist_ID = %s"
         cur.execute(query, (user_id, playlist_id))
         con.commit()
 
@@ -587,9 +587,8 @@ def dispatch(ch):
         user_id = input("Enter User ID: ")
         removeUser(user_id)
     elif (ch == 15):
-        user_id = input("Enter User ID: ")
         playlist_id = input("Enter Playlist ID: ")
-        removeUserPlaylist(user_id, playlist_id)
+        removeUserPlaylist(playlist_id)
     elif (ch == 16):    
         name = input("Enter Album Name: ")
         release_date = input("Enter Release Date (YYYY-MM-DD): ")
