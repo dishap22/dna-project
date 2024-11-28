@@ -612,7 +612,6 @@ def dispatch(ch):
 while(1):
     tmp = sp.call('clear', shell=True)
     
-    # Can be skipped if you want to hardcode username and password
     username = input("Username: ")
     password = input("Password: ")
 
@@ -637,7 +636,6 @@ while(1):
         with con.cursor() as cur:
             while(1):
                 tmp = sp.call('clear', shell=True)
-                # Here taking example of Employee Mini-world
                 print("1. Like a track")  
                 print("2. Unlike a track") 
                 print("3. Follow an artist")
