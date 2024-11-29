@@ -1,14 +1,6 @@
-import mysql.connector
-from mysql.connector import Error
-
-def connect_to_db():
-    # Connect to the MySQL database.
-    return mysql.connector.connect(
-        host="localhost",
-        user="root",  
-        password="12345678",  
-        database="phase" 
-    )
+import subprocess as sp
+import pymysql
+import pymysql.cursors
 
 def title_case(text):
     # Convert the text to title case.
@@ -16,36 +8,37 @@ def title_case(text):
 
 def get_all_followers_of_artist(cursor, identifier):
     # Retrieve all users who follow a given artist by ID or name.
-    try:
-        if isinstance(identifier, int):  # Search by Artist_ID
-            query = """
-            SELECT U.Username
-            FROM User U
-            JOIN UserFollowsArtist UFA ON U.User_ID = UFA.User_ID
-            WHERE UFA.Artist_ID = %s;
-            """
-            cursor.execute(query, (identifier,))
-        else:  # Search by Artist Name
-            query = """
-            SELECT U.Username
-            FROM User U
-            JOIN UserFollowsArtist UFA ON U.User_ID = UFA.User_ID
-            JOIN Artists A ON UFA.Artist_ID = A.Artist_ID
-            WHERE A.Name = %s;
-            """
-            cursor.execute(query, (identifier,))
-        followers = cursor.fetchall()
-        
-        # Print each follower separated by commas, except the last one
-        if followers:
-            for i, follower in enumerate(followers):
-                follower_name = title_case(follower[0])
-                if i < len(followers) - 1:
-                    print(follower_name, end=", ")
-                else:
-                    print(follower_name)
-    except Error as e:
-        print(f"Error executing query: {e}")
+    
+    if isinstance(identifier, int):  # Search by Artist_ID
+        query = """
+        SELECT U.Username
+        FROM User U
+        JOIN UserFollowsArtist UFA ON U.User_ID = UFA.User_ID
+        WHERE UFA.Artist_ID = %s;
+        """
+        cursor.execute(query, (identifier,))
+    else:  # Search by Artist Name
+        query = """
+        SELECT U.Username
+        FROM User U
+        JOIN UserFollowsArtist UFA ON U.User_ID = UFA.User_ID
+        JOIN Artists A ON UFA.Artist_ID = A.Artist_ID
+        WHERE A.Name = %s;
+        """
+        cursor.execute(query, (identifier,))
+    followers = cursor.fetchall()
+    
+    # Print each follower separated by commas, except the last one
+    if followers:
+        for i, follower in enumerate(followers):
+            follower_name = title_case(follower[0])
+            if i < len(followers) - 1:
+                print(follower_name, end=", ")
+            else:
+                print(follower_name)
+    else:
+        print("No followers found.")
+    
 
 def get_artists_in_range(cursor, min_followers, max_followers):
     # Retrieve artist names and genres with followers in a given range.
@@ -197,67 +190,73 @@ def get_sorted_by_genre(cursor):
                 print(track_info)
 
 def main():
-    db_connection = connect_to_db()
-    cursor = db_connection.cursor()
+    con = pymysql.connect(
+        host="localhost", 
+        user="root",
+        password="ak0!a",
+        database="project",
+        cursorclass=pymysql.cursors.DictCursor
+    )
 
-    while True:
-        print("\nChoose an operation:")
-        print("1. Get all followers of an artist")
-        print("2. Retrieve names and genres of artists in a follower range")
-        print("3. Calculate average followers per artist")
-        print("4. Search for tracks by partial name")
-        print("5. Get average tracks per playlist")
-        print("6. Get total likes for an artist's tracks")
-        print("7. Filter and sort albums, artists, and tracks by genre")
-        print("8. Exit")
+    with con.cursor() as cursor:
+        while 1:
+            print("\nChoose an operation:")
+            print("1. Get all followers of an artist")
+            print("2. Retrieve names and genres of artists in a follower range")
+            print("3. Calculate average followers per artist")
+            print("4. Search for tracks by partial name")
+            print("5. Get average tracks per playlist")
+            print("6. Get total likes for an artist's tracks")
+            print("7. Filter and sort albums, artists, and tracks by genre")
+            print("8. Exit")
 
-        choice = input("Enter your choice (1-8): ")
-        
-        if choice == "1":
-            identifier = input("Enter Artist ID (integer) or Name (string): ")
-            if identifier.isdigit():
-                identifier = int(identifier)
-            print("Followers:")
-            get_all_followers_of_artist(cursor, identifier)
+            choice = input("Enter your choice (1-8): ")
+            
+            if choice == "1":
+                identifier = input("Enter Artist ID (integer) or Name (string): ")
+                if identifier.isdigit():
+                    identifier = int(identifier)
+                print("Followers:")
+                get_all_followers_of_artist(cursor, identifier)
 
-        elif choice == "2":
-            min_followers = int(input("Enter minimum follower count: "))
-            max_followers = int(input("Enter maximum follower count: "))
-            print("Artists in range:")
-            get_artists_in_range(cursor, min_followers, max_followers)
+            elif choice == "2":
+                min_followers = int(input("Enter minimum follower count: "))
+                max_followers = int(input("Enter maximum follower count: "))
+                print("Artists in range:")
+                get_artists_in_range(cursor, min_followers, max_followers)
 
-        elif choice == "3":
-            avg_followers = get_average_followers(cursor)
-            print("Average Followers Per Artist:", avg_followers)
+            elif choice == "3":
+                avg_followers = get_average_followers(cursor)
+                print("Average Followers Per Artist:", avg_followers)
 
-        elif choice == "4":
-            partial_name = input("Enter partial track name: ")
-            print("Matching Tracks:")
-            search_tracks(cursor, partial_name)
+            elif choice == "4":
+                partial_name = input("Enter partial track name: ")
+                print("Matching Tracks:")
+                search_tracks(cursor, partial_name)
 
-        elif choice == "5":
-            avg_tracks = get_average_tracks_per_playlist(cursor)
-            print("Average Tracks Per Playlist:", avg_tracks)
+            elif choice == "5":
+                avg_tracks = get_average_tracks_per_playlist(cursor)
+                print("Average Tracks Per Playlist:", avg_tracks)
 
-        elif choice == "6":
-            identifier = input("Enter Artist ID (integer) or Name (string): ")
-            if identifier.isdigit():
-                identifier = int(identifier)
-            total_likes = get_total_likes_for_artist(cursor, identifier)
-            print("Total Likes for Artist's Tracks:", total_likes)
+            elif choice == "6":
+                identifier = input("Enter Artist ID (integer) or Name (string): ")
+                if identifier.isdigit():
+                    identifier = int(identifier)
+                total_likes = get_total_likes_for_artist(cursor, identifier)
+                print("Total Likes for Artist's Tracks:", total_likes)
 
-        elif choice == "7":
-            get_sorted_by_genre(cursor)
+            elif choice == "7":
+                get_sorted_by_genre(cursor)
 
-        elif choice == "8":
-            print("Exiting program.")
-            break
+            elif choice == "8":
+                print("Exiting program.")
+                break
 
-        else:
-            print("Invalid choice. Please try again.")
+            else:
+                print("Invalid choice. Please try again.")
 
     cursor.close()
-    db_connection.close()
+    con.close()
 
 if __name__ == "__main__":
     main()

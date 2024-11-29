@@ -2,6 +2,11 @@ import subprocess as sp
 import pymysql
 import pymysql.cursors
 
+
+# first do 4. 
+# then do 4. and 5.
+
+
 # ============== [Functional Requirement A] ==============
 def getAllFollowersofArtists(artist_id):
     try:
@@ -243,14 +248,16 @@ def addplaylist():
             # check if playlist name already exists for same user 
             query = "SELECT * FROM Playlist WHERE Name = '" + playlistname + "' AND Creator = " + str(rows[0]["User_ID"])
             cur.execute(query)
-            rows = cur.fetchall()
+            play = cur.fetchall()
+            print(play)
             con.commit()
-            if len(rows) > 0:
+            if len(play) > 0:
                 print("Playlist with same name already exists")
                 return
             imagename = input("Enter image name: ")
             playlisttype = input("Enter playlist type (public or private): ")
             playlistgenre = input("Enter playlist genre: ")
+            #print(rows)
             query = "INSERT INTO Playlist (Name, Image, Type, Creator) VALUES ('" + playlistname + "', '" + imagename + "', '" + playlisttype + "', " + str(rows[0]["User_ID"]) + ")"
             cur.execute(query)
             con.commit()
@@ -258,7 +265,7 @@ def addplaylist():
             query = "SELECT Playlist_ID FROM Playlist WHERE Name = '" + playlistname + "' AND Creator = " + str(rows[0]["User_ID"])
             cur.execute(query)
             playlistid = cur.fetchall()[0]["Playlist_ID"]
-            query = "INSERT INTO PlaylistGenre (Playlist_ID, Genre) VALUES (" + str(playlistid) + ", '" + playlistgenre + "')"
+            query = "INSERT INTO PlaylistGenre (Playlist_ID, GenreName) VALUES (" + str(playlistid) + ", '" + playlistgenre + "')"
             cur.execute(query)
             con.commit()
             print("Inserted Into Database")
@@ -782,10 +789,10 @@ while(1):
         # Set db name accordingly which have been create by you
         # Set host to the server's address if you don't want to use local SQL server 
         con = pymysql.connect(host='localhost',
-                              port=30306,
+                              port=3306,
                               user="root",
-                              password="root",
-                              db='COMPANY',
+                              password="ak0!a",
+                              db='project',
                               cursorclass=pymysql.cursors.DictCursor)
         tmp = sp.call('clear', shell=True)
 
