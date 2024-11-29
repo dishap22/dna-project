@@ -2,6 +2,97 @@ import subprocess as sp
 import pymysql
 import pymysql.cursors
 
+# ============== [Functional Requirement A] ==============
+def getAllFollowersofArtists(artist_id):
+    try:
+        query = "SELECT User_ID FROM UserFollowsArtist WHERE Artist_ID = %s"
+        cur.execute(query, (artist_id,))
+        result = cur.fetchall()
+        if result:
+            return result
+        else:
+            print("Error: No followers found")
+            return None
+    except Exception as e:
+        print("Failed to retrieve followers")
+        print(">>>>>>>>>>>>>", e)
+        return None
+
+def getArtistsInRange(min_followers,max_follower):
+    try:
+        query = "SELECT Artist_ID, COUNT(User_ID) AS Follower_Count FROM UserFollowsArtist GROUP BY Artist_ID HAVING COUNT(User_ID) BETWEEN %s AND %s;"
+        cur.execute(query, (min_followers, max_follower))
+        result = cur.fetchall()
+        if result:
+            return result
+        else:
+            print("Error: No artists found")
+            return None
+    except Exception as e:
+        print("Failed to retrieve artists")
+        print(">>>>>>>>>>>>>", e)
+        return None
+    
+def getAverageFollowers():
+    try:
+        query = "SELECT AVG(Follower_Count) AS Average_Followers FROM ( SELECT Artist_ID, COUNT(User_ID) AS F1010ollower_Count FROM UserFollowsArtist GROUP BY Artist_ID ) AS ArtistFollowerCounts;"
+        cur.execute(query)
+        result = cur.fetchone()
+        if result:
+            return result
+        else:
+            print("Error: No artists found")
+            return None
+    except Exception as e:
+        print("Failed to retrieve artists")
+        print(">>>>>>>>>>>>>", e)
+        return None
+
+def searchTracks(search_string):
+    try:
+        query = "SELECT Track_ID, Track_Name FROM Track WHERE Track_Name LIKE %s"
+        cur.execute(query, (f"%{search_string}%",))
+        result = cur.fetchall()
+        if result:
+            return result
+        else:
+            print("Error: No tracks found")
+            return None
+    except Exception as e:
+        print("Failed to retrieve tracks")
+        print(">>>>>>>>>>>>>", e)
+        return None
+    
+def getAverageTracksperPlaylist():  
+    try:
+        query = "SELECT AVG(TrackCount) AS Avg_Tracks_Per_Playlist FROM (SELECT Playlist_ID, COUNT(Track_ID) AS TrackCount FROM TrackInPlaylist GROUP BY Playlist_ID) AS PlaylistTrackCounts;"
+        cur.execute(query)
+        result = cur.fetchone()
+        if result:
+            return result
+        else:
+            print("Error: No playlists found")
+            return None
+    except Exception as e:
+        print("Failed to retrieve playlists")
+        print(">>>>>>>>>>>>>", e)
+        return None
+
+def getTotalLikesforArtist(artist_id):
+    try:
+        query = "SELECT a.Artist_ID, a.Name AS Artist_Name, COALESCE(SUM(t.Likes), 0) AS Total_Likes FROM Artists a JOIN Albums al ON a.Artist_ID = al.Artist_ID JOIN Track t ON al.Album_ID = t.Album_ID WHERE a.Artist_ID = %s GROUP BY a.Artist_ID, a.Name;"
+        cur.execute(query, (artist_id,))
+        result = cur.fetchone()
+        if result:
+            return result
+        else:
+            print("Error: No likes found")
+            return None
+    except Exception as e:
+        print("Failed to retrieve likes")
+        print(">>>>>>>>>>>>>", e)
+        return None
+
 # ============== [Functional Requirement B] ==============
 def insertNewUser(name, email, password, is_premium, profile_picture):
     if name == "" or email == "" or password == "" or is_premium == "":
@@ -79,7 +170,7 @@ def removeUser(user_id):
         print("Failed to remove user")
         print(">>>>>>>>>>>>>", e)
 
-def removeUserPlaylist(playlist_id):
+def removeUserPlaylist(playlist_id,user_id):
     
     
     # if the user and playlist exist, remove the playlist from the user's playlists
@@ -506,8 +597,57 @@ def unsubscribeToPremium(user_id):
         print("Failed to unsubscribe to premium")
         print(">>>>>>>>>>>>>", e)
 
+# ============== [Functional Requirement J] ==============
+def ArtistsSortedByGenre():
+    try:
+        query = """
+        SELECT a.Artist_ID, a.Name AS Artist_Name, ag.GenreName
+        FROM Artists a
+        LEFT JOIN ArtistGenre ag ON a.Artist_ID = ag.Artist_ID
+        ORDER BY ag.GenreName ASC, a.Name ASC;
+        """
+        cur.execute(query)
+        result = cur.fetchall()
+        if result:
+            return result
+        else:
+            print("Error: No artists found")
+            return None
+    except Exception as e:
+        print("Failed to retrieve artists")
+        print(">>>>>>>>>>>>>", e)
+        return None
 
+    
+def PlaylistsSortedbyGenre():
+    try:
+        query = "SELECT p.Playlist_ID, p.Name AS Playlist_Name, pg.GenreName FROM Playlist p JOIN PlaylistGenre pg ON p.Playlist_ID = pg.Playlist_ID ORDER BY pg.GenreName;"
+        cur.execute(query)
+        result = cur.fetchall()
+        if result:
+            return result
+        else:
+            print("Error: No albums found")
+            return None
+    except Exception as e:
+        print("Failed to retrieve albums")
+        print(">>>>>>>>>>>>>", e)
+        return None
 
+def TrackssortedbyGenre():
+    try:
+        query = "SELECT t.Track_ID, t.Track_Name, tg.GenreName FROM Track t JOIN TrackGenre tg ON t.Track_ID = tg.Track_ID ORDER BY tg.GenreName;"
+        cur.execute(query)
+        result = cur.fetchall()
+        if result:
+            return result
+        else:
+            print("Error: No tracks found")
+            return None
+    except Exception as e:
+        print("Failed to retrieve tracks")
+        print(">>>>>>>>>>>>>", e)
+        return None
 
 # ============== [Handler Code] ==============
 def dispatch(ch):
@@ -588,7 +728,8 @@ def dispatch(ch):
         removeUser(user_id)
     elif (ch == 15):
         playlist_id = input("Enter Playlist ID: ")
-        removeUserPlaylist(playlist_id)
+        user_id = input("Enter User ID: ")
+        removeUserPlaylist(playlist_id,user_id)
     elif (ch == 16):    
         name = input("Enter Album Name: ")
         release_date = input("Enter Release Date (YYYY-MM-DD): ")
@@ -603,6 +744,29 @@ def dispatch(ch):
         genre = input("Enter New Genre: ")
         cover_art = input("Enter New Cover Art Path: ")
         updateAlbumDetails(album_id, name, release_date, genre, cover_art)
+    elif (ch == 18):
+        artist_id = int(input("Enter Album ID: "))
+        getAllFollowersofArtists(artist_id)
+    elif (ch ==19):
+        min = int(input("Minimum number of Followers: "))
+        max = int(input("Maximum number of Followers: "))
+        getArtistsInRange(min,max)
+    elif (ch == 20):
+        getAverageFollowers()
+    elif (ch == 21):
+        search = input("Ender name of song: ")
+        searchTracks(search)
+    elif(ch == 22):
+        getAverageTracksperPlaylist()
+    elif(ch == 23):
+        artist_id = int(input("Enter Artist ID: "))
+        getTotalLikesforArtist(artist_id)
+    elif(ch == 24):
+        ArtistsSortedByGenre()
+    elif(ch == 25): 
+        PlaylistsSortedbyGenre()
+    elif(ch ==26):
+        TrackssortedbyGenre()
     else:
         print("Error: Invalid Option")
 
@@ -620,7 +784,7 @@ while(1):
         con = pymysql.connect(host='localhost',
                               port=30306,
                               user="root",
-                              password="password",
+                              password="root",
                               db='COMPANY',
                               cursorclass=pymysql.cursors.DictCursor)
         tmp = sp.call('clear', shell=True)
@@ -652,10 +816,19 @@ while(1):
                 print("15. Remove Playlist from User")
                 print("16. Create New Album")
                 print("17. Update Album Details")
-                print("18. Logout")
+                print("18. Find all the Followers of an Artist: ")
+                print("19. Find all the artists with follower count in a certain range: ")
+                print("20. Find Average Followers of Artists: ")
+                print("21. Find a track by entering partial track names: ")
+                print("22. Find Average Number of Tracks per playlist: ")
+                print("23. Find Total Likes of an Artist: ")
+                print("24. Get Artists sorted by Genre: ")
+                print("25. Get Playlists sorted by Genre: ")
+                print("26. Get Tracks sorted by Genre: ")
+                print("27. Logout")
                 ch = int(input("Enter choice> "))
                 tmp = sp.call('clear', shell=True)
-                if ch == 18:
+                if ch == 27:
                     exit()
                 else:
                     dispatch(ch)
